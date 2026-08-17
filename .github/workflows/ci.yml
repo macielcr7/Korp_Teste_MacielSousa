@@ -1,0 +1,145 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: inventory_test
+          POSTGRES_USER: inventory
+          POSTGRES_PASSWORD: inventory
+        ports:
+          - 54321:5432
+        options: >-
+          --health-cmd "pg_isready -U inventory -d inventory_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    defaults:
+      run:
+        working-directory: services/inventory
+    env:
+      DATABASE_URL: postgres://inventory:inventory@localhost:54321/inventory_test?sslmode=disable
+      INVENTORY_INTEGRATION_DATABASE_URL: postgres://inventory:inventory@localhost:54321/inventory_test?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/inventory/go.mod
+          cache-dependency-path: services/inventory/go.sum
+      - name: Verify modules
+        run: go mod tidy && git diff --exit-code -- go.mod go.sum
+      - name: Apply migrations
+        run: go run ./cmd/migrate -migrations ./migrations
+      - name: Verify formatting
+        run: test -z "$(gofmt -l .)"
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test -race -p=1 ./...
+      - name: Audit dependencies
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...
+      - name: Build
+        run: go build ./cmd/app
+
+  billing:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: billing_test
+          POSTGRES_USER: billing
+          POSTGRES_PASSWORD: billing
+        ports:
+          - 54322:5432
+        options: >-
+          --health-cmd "pg_isready -U billing -d billing_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    defaults:
+      run:
+        working-directory: services/billing
+    env:
+      DATABASE_URL: postgres://billing:billing@localhost:54322/billing_test?sslmode=disable
+      BILLING_INTEGRATION_DATABASE_URL: postgres://billing:billing@localhost:54322/billing_test?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/billing/go.mod
+          cache-dependency-path: services/billing/go.sum
+      - name: Verify modules
+        run: go mod tidy && git diff --exit-code -- go.mod go.sum
+      - name: Apply migrations
+        run: go run ./cmd/migrate -migrations ./migrations
+      - name: Verify formatting
+        run: test -z "$(gofmt -l .)"
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test -race -p=1 ./...
+      - name: Audit dependencies
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...
+      - name: Build API and worker
+        run: go build ./cmd/app && go build ./cmd/worker
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test:ci
+      - run: pnpm audit --prod --audit-level high
+      - run: pnpm build
+
+  integration:
+    runs-on: ubuntu-latest
+    needs: [inventory, billing, web]
+    env:
+      INVENTORY_INTERNAL_TOKEN: ci-integration-only-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Start the complete environment
+        run: docker compose up -d --build
+      - name: Wait for readiness
+        run: |
+          curl --fail --retry 60 --retry-delay 2 --retry-all-errors http://localhost:8081/ready
+          curl --fail --retry 60 --retry-delay 2 --retry-all-errors http://localhost:8082/ready
+          curl --fail --retry 60 --retry-delay 2 --retry-all-errors http://localhost:4200/healthz
+      - name: Critical end-to-end scenarios
+        run: node scripts/e2e-smoke.mjs
+      - name: Dependency failure and automatic recovery
+        run: node scripts/failure-recovery.mjs
+      - name: Container logs
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Stop the environment
+        if: always()
+        run: docker compose down --volumes
