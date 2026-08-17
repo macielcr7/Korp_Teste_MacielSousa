@@ -166,6 +166,25 @@ describe('InvoiceFormComponent idempotency', () => {
     expect(component.productOptions(secondProductControl)).toEqual([remoteProduct]);
   });
 
+  it('orders autocomplete options alphabetically by product description', () => {
+    const webcam: Product = {
+      id: 'product-webcam',
+      code: 'PRD-003',
+      description: 'Webcam Full HD',
+      balance: 6,
+    };
+    const cable: Product = {
+      id: 'product-cable',
+      code: 'PRD-005',
+      description: 'Cabo HDMI 2 metros',
+      balance: 20,
+    };
+    const { component } = createFixture(of(createdInvoice), [webcam, product, cable]);
+    const firstProductControl = component.items.at(0).get('productId') as FormControl<string>;
+
+    expect(component.productOptions(firstProductControl)).toEqual([cable, product, webcam]);
+  });
+
   it('clears the creation key after a terminal failure', () => {
     const terminalError = new ApiError('Dados inválidos.', 422, undefined, undefined, false);
     const { submit } = createFixture(throwError(() => terminalError));
@@ -212,14 +231,17 @@ describe('InvoiceFormComponent idempotency', () => {
     fixture.destroy();
   });
 
-  function createFixture(createResult: Observable<Invoice>) {
+  function createFixture(
+    createResult: Observable<Invoice>,
+    catalog: readonly Product[] = [product],
+  ) {
     const billingApi = {
       create: vi.fn<(request: CreateInvoiceRequest, idempotencyKey: string) => Observable<Invoice>>(
         () => createResult,
       ),
     };
     const productApi = {
-      list: vi.fn(() => of({ items: [product], total: 1, limit: 20, offset: 0 })),
+      list: vi.fn(() => of({ items: catalog, total: catalog.length, limit: 20, offset: 0 })),
     };
     TestBed.configureTestingModule({
       imports: [InvoiceFormComponent],

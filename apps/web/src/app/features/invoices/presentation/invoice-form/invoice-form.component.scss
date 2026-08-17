@@ -224,6 +224,11 @@ dd {
   align-items: center;
   justify-content: center;
 }
+.summary-panel > a {
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.8rem;
+}
 button mat-spinner {
   display: inline-block;
 }

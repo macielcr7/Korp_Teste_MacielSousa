@@ -32,6 +32,11 @@ export const MAXIMUM_INVOICE_ITEMS = 20;
 
 type InvoiceFormErrorSource = 'catalog-load' | 'catalog-search' | 'submission';
 
+const productDescriptionCollator = new Intl.Collator('pt-BR', {
+  numeric: true,
+  sensitivity: 'base',
+});
+
 interface FailedCatalogSearch {
   readonly control: FormControl<string>;
   readonly term: string;
@@ -149,8 +154,9 @@ export class InvoiceFormFacade {
         }),
       )
       .subscribe((collection) => {
-        this.mergeProducts(collection.items);
-        this.optionsSignal(firstControl).set(collection.items);
+        const orderedProducts = this.orderProductOptions(collection.items);
+        this.mergeProducts(orderedProducts);
+        this.optionsSignal(firstControl).set(orderedProducts);
       });
   }
 
@@ -296,15 +302,16 @@ export class InvoiceFormFacade {
   }
 
   private applySearchResult(control: FormControl<string>, collection: ProductCollection): void {
-    this.mergeProducts(collection.items);
-    this.optionsSignal(control).set(collection.items);
+    const orderedProducts = this.orderProductOptions(collection.items);
+    this.mergeProducts(orderedProducts);
+    this.optionsSignal(control).set(orderedProducts);
   }
 
   private mergeProducts(incoming: readonly Product[]): void {
     this.products.update((current) => {
       const merged = new Map(current.map((product) => [product.id, product]));
       for (const product of incoming) merged.set(product.id, product);
-      return [...merged.values()];
+      return this.orderProductOptions([...merged.values()]);
     });
     for (const item of this.items.controls) {
       item.controls.productId.updateValueAndValidity({ emitEvent: false });
@@ -314,6 +321,14 @@ export class InvoiceFormFacade {
 
   private findProduct(productId: string): Product | undefined {
     return this.products().find((product) => product.id === productId);
+  }
+
+  private orderProductOptions(products: readonly Product[]): readonly Product[] {
+    return [...products].sort(
+      (left, right) =>
+        productDescriptionCollator.compare(left.description, right.description) ||
+        productDescriptionCollator.compare(left.code, right.code),
+    );
   }
 
   private clearCreateIdentity(): void {
