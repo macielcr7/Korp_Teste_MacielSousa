@@ -1,0 +1,276 @@
+openapi: 3.1.0
+info:
+  title: Korp Inventory API
+  version: 1.0.0
+  description: API for products, balances and idempotent stock debit commands.
+servers:
+  - url: /
+paths:
+  /health:
+    get:
+      operationId: inventoryHealth
+      summary: Liveness probe for the Inventory Service.
+      responses:
+        '200':
+          description: Service process is running.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthStatus' }
+  /ready:
+    get:
+      operationId: inventoryReadiness
+      summary: Readiness probe for the Inventory Service and its database.
+      responses:
+        '200':
+          description: Service and required dependencies are ready.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReadyStatus' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /metrics:
+    get:
+      operationId: inventoryMetrics
+      summary: Prometheus metrics for the Inventory Service.
+      description: Operations endpoint available only on the public HTTP boundary.
+      responses:
+        '200':
+          description: Prometheus text exposition.
+          content:
+            text/plain:
+              schema: { type: string }
+  /api/inventory/v1/products:
+    post:
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateProductRequest' }
+      responses:
+        '201':
+          description: Product created.
+          headers:
+            Location: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Product' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '500': { $ref: '#/components/responses/Problem' }
+    get:
+      operationId: listProducts
+      parameters:
+        - name: search
+          in: query
+          description: Case-insensitive literal match against product code or description.
+          schema: { type: string }
+        - name: status
+          in: query
+          description: Derived stock status. Active means balance above 5; low means 1 through 5; empty means zero.
+          schema: { type: string, enum: [all, active, low, empty], default: all }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '200':
+          description: Product collection.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total, limit, offset]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Product' }
+                  total: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+                  limit: { type: integer }
+                  offset: { type: integer }
+        '400': { $ref: '#/components/responses/Problem' }
+        '500': { $ref: '#/components/responses/Problem' }
+  /api/inventory/v1/products/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ProductID'
+    get:
+      operationId: getProduct
+      responses:
+        '200':
+          description: Product detail.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Product' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '500': { $ref: '#/components/responses/Problem' }
+  /internal/inventory/v1/stock-debits:
+    servers:
+      - url: http://localhost:8083
+    post:
+      operationId: commitStockDebit
+      description: Internal idempotent command used by the Billing worker.
+      x-visibility: internal
+      security:
+        - InternalToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StockDebitRequest' }
+      responses:
+        '200':
+          description: Debit committed or previously committed result replayed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StockCommand' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /internal/inventory/v1/stock-debits/{commandId}:
+    servers:
+      - url: http://localhost:8083
+    parameters:
+      - name: commandId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      operationId: getStockCommand
+      x-visibility: internal
+      security:
+        - InternalToken: []
+      responses:
+        '200':
+          description: Previously persisted command result.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StockCommand' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+components:
+  securitySchemes:
+    InternalToken:
+      type: apiKey
+      in: header
+      name: X-Internal-Token
+  parameters:
+    ProductID:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    Problem:
+      description: Problem Details error.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    HealthStatus:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status: { type: string, const: ok }
+    ReadyStatus:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status: { type: string, const: ready }
+    CreateProductRequest:
+      type: object
+      additionalProperties: false
+      required: [code, description, balance]
+      properties:
+        code: { type: string, minLength: 1, maxLength: 64, pattern: '^[A-Za-z0-9._-]+$' }
+        description: { type: string, minLength: 1, maxLength: 255 }
+        balance: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+    Product:
+      type: object
+      required: [id, code, description, balance, version, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string, minLength: 1, maxLength: 64, pattern: '^[A-Z0-9._-]+$' }
+        description: { type: string }
+        balance: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+        version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    StockDebitRequest:
+      type: object
+      additionalProperties: false
+      required: [commandId, invoiceId, items]
+      properties:
+        commandId: { type: string, format: uuid }
+        invoiceId: { type: string, format: uuid }
+        items:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/StockDebitItem' }
+    StockDebitItem:
+      type: object
+      additionalProperties: false
+      required: [productId, quantity]
+      properties:
+        productId: { type: string, format: uuid }
+        quantity: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+    StockCommand:
+      type: object
+      required: [commandId, invoiceId, status, items, movements, createdAt]
+      properties:
+        commandId: { type: string, format: uuid }
+        invoiceId: { type: string, format: uuid }
+        status: { type: string, enum: [COMMITTED, REJECTED] }
+        errorCode:
+          type: string
+          description: Present when status is REJECTED.
+        errorDetail:
+          type: string
+          description: Internal rejection detail present when status is REJECTED.
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/StockDebitItem' }
+        movements:
+          type: array
+          items:
+            type: object
+            required: [id, productId, quantity, balanceBefore, balanceAfter, createdAt]
+            properties:
+              id: { type: string, format: uuid }
+              productId: { type: string, format: uuid }
+              quantity: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+              balanceBefore: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+              balanceAfter: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+              createdAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+    Problem:
+      type: object
+      required: [type, title, status, code, detail, traceId, retryable, errors]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        code: { type: string }
+        detail: { type: string }
+        traceId: { type: string }
+        retryable: { type: boolean }
+        commandId: { type: string }
+        errors:
+          type: array
+          items: { $ref: '#/components/schemas/FieldError' }
+    FieldError:
+      type: object
+      additionalProperties: false
+      required: [field, message]
+      properties:
+        field: { type: string }
+        message: { type: string }

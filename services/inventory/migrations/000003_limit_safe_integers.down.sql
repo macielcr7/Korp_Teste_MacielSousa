@@ -1,0 +1,3 @@
+ALTER TABLE stock_movements DROP CONSTRAINT stock_movements_safe_integers;
+ALTER TABLE stock_command_items DROP CONSTRAINT stock_command_items_quantity_safe_integer;
+ALTER TABLE products DROP CONSTRAINT products_safe_integers;
