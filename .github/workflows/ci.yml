@@ -32,8 +32,8 @@ jobs:
       DATABASE_URL: postgres://inventory:inventory@localhost:54321/inventory_test?sslmode=disable
       INVENTORY_INTEGRATION_DATABASE_URL: postgres://inventory:inventory@localhost:54321/inventory_test?sslmode=disable
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version-file: services/inventory/go.mod
           cache-dependency-path: services/inventory/go.sum
@@ -75,8 +75,8 @@ jobs:
       DATABASE_URL: postgres://billing:billing@localhost:54322/billing_test?sslmode=disable
       BILLING_INTEGRATION_DATABASE_URL: postgres://billing:billing@localhost:54322/billing_test?sslmode=disable
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version-file: services/billing/go.mod
           cache-dependency-path: services/billing/go.sum
@@ -101,11 +101,11 @@ jobs:
       run:
         working-directory: apps/web
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           version: 11.19.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
@@ -122,8 +122,8 @@ jobs:
     env:
       INVENTORY_INTERNAL_TOKEN: ci-integration-only-token
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
       - name: Start the complete environment
