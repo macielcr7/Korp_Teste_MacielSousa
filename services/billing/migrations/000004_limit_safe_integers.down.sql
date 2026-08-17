@@ -1,0 +1,2 @@
+ALTER TABLE invoice_items DROP CONSTRAINT invoice_items_quantity_safe_integer;
+ALTER TABLE invoices DROP CONSTRAINT invoices_safe_integers;
