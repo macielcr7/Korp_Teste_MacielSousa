@@ -1,0 +1,212 @@
+<nav class="local-breadcrumb" aria-label="Navegação estrutural">
+  <a routerLink="/notas">Notas</a><span>›</span><span>Detalhe</span>
+</nav>
+
+<app-error-banner
+  [error]="error()"
+  [heading]="errorTitle()"
+  [retryable]="error()?.retryable === true && !processing()"
+  (retry)="retryLastAction()"
+/>
+
+@if (loading()) {
+  <app-loading-state message="Carregando nota…" />
+} @else if (invoice(); as currentInvoice) {
+  <header class="note-header">
+    <div>
+      <div class="title-line">
+        <h1>NF-{{ currentInvoice.number }}</h1>
+        <app-invoice-status-badge [status]="currentInvoice.status" [processing]="processing()" />
+      </div>
+      <p>
+        Criada em {{ currentInvoice.createdAt | date: 'dd/MM/yyyy' }} às
+        {{ currentInvoice.createdAt | date: 'HH:mm' }}
+      </p>
+    </div>
+    <div class="header-actions">
+      <a mat-button routerLink="/notas"><app-icon name="back" /> Voltar</a>
+      @if (currentInvoice.status === 'OPEN') {
+        <button mat-flat-button type="button" [disabled]="processing()" (click)="requestClose()">
+          <app-icon name="arrow" /> Emitir e imprimir
+        </button>
+      } @else {
+        <a mat-flat-button [routerLink]="['/notas', currentInvoice.id, 'impressao']"
+          ><app-icon name="printer" /> Imprimir</a
+        >
+      }
+    </div>
+  </header>
+
+  @if (processing()) {
+    <output class="info-banner" aria-live="polite">
+      <app-icon name="refresh" /><span
+        ><strong>Processamento automático em andamento.</strong> Esta página atualiza sozinha; você
+        pode sair e retornar depois.</span
+      >
+    </output>
+    <section class="processing-layout">
+      <article class="panel progress-panel" aria-busy="true">
+        <header>
+          <h2>Progresso da emissão</h2>
+          <p>{{ operation() ? operationLabel(operation()!.status) : 'Preparando operação…' }}</p>
+        </header>
+        <ol class="timeline">
+          <li [attr.data-state]="stepState('PENDING')">
+            <span class="step-marker"><app-icon name="check" /></span>
+            <div>
+              <strong>PENDING</strong>
+              <p>Nota enfileirada para emissão</p>
+            </div>
+          </li>
+          <li [attr.data-state]="stepState('PROCESSING')">
+            <span class="step-marker"><app-icon name="check" /></span>
+            <div>
+              <strong>PROCESSING</strong>
+              <p>Conectando ao serviço de estoque</p>
+            </div>
+          </li>
+          <li [attr.data-state]="stepState('RETRYING')">
+            <span class="step-marker"><app-icon name="refresh" /></span>
+            <div>
+              <strong>RETRYING</strong>
+              <p>
+                @if (operation()?.status === 'RETRYING') {
+                  Tentativa {{ operation()?.attempts || 1 }} · aguardando recuperação
+                } @else {
+                  Ativado somente em falhas transitórias
+                }
+              </p>
+            </div>
+          </li>
+          <li [attr.data-state]="stepState('COMPLETED')">
+            <span class="step-marker"><app-icon name="check" /></span>
+            <div>
+              <strong>SUCCESS</strong>
+              <p>Aguardando conclusão</p>
+            </div>
+          </li>
+        </ol>
+        <div class="progress-label">
+          <span>Progresso</span><strong>{{ operationProgress(operation()?.status) }}%</strong>
+        </div>
+        <div class="progress-track">
+          <span [style.width.%]="operationProgress(operation()?.status)"></span>
+        </div>
+      </article>
+
+      <article class="panel items-card">
+        <header class="panel-heading">
+          <div>
+            <h2>Itens da nota</h2>
+            <p>
+              {{ currentInvoice.items.length }}
+              {{ currentInvoice.items.length === 1 ? 'item' : 'itens' }} ·
+              {{ currentInvoice.items | invoiceTotalUnits }}
+              {{ (currentInvoice.items | invoiceTotalUnits) === 1 ? 'unidade' : 'unidades' }}
+            </p>
+          </div>
+        </header>
+        <div class="detail-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Descrição</th>
+                <th>Qtd.</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of currentInvoice.items; track item.productId) {
+                <tr>
+                  <td>
+                    <strong>{{ item.productCode }}</strong>
+                  </td>
+                  <td>{{ item.productDescription }}</td>
+                  <td>{{ item.quantity }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  } @else {
+    @if (currentInvoice.status === 'CLOSED') {
+      <div class="success-banner">
+        <app-icon name="check" /><strong
+          >Nota emitida com sucesso em {{ currentInvoice.closedAt | date: 'dd/MM/yyyy' }} às
+          {{ currentInvoice.closedAt | date: 'HH:mm' }}</strong
+        >
+      </div>
+    }
+
+    <section class="detail-layout">
+      <article class="panel items-card">
+        <header class="panel-heading">
+          <div>
+            <h2>Itens da nota</h2>
+            <p>
+              {{ currentInvoice.items.length }}
+              {{ currentInvoice.items.length === 1 ? 'item' : 'itens' }} ·
+              {{ currentInvoice.items | invoiceTotalUnits }}
+              {{ (currentInvoice.items | invoiceTotalUnits) === 1 ? 'unidade' : 'unidades' }}
+            </p>
+          </div>
+        </header>
+        <div class="detail-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Descrição</th>
+                <th>Quantidade</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of currentInvoice.items; track item.productId) {
+                <tr>
+                  <td>
+                    <strong>{{ item.productCode }}</strong>
+                  </td>
+                  <td>{{ item.productDescription }}</td>
+                  <td>{{ item.quantity }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+      <aside class="panel metadata">
+        <h2>Detalhes</h2>
+        <dl>
+          <dt>Data de criação</dt>
+          <dd>{{ currentInvoice.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+          @if (currentInvoice.closedAt) {
+            <dt>Data de emissão</dt>
+            <dd>{{ currentInvoice.closedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+          }
+          <dt>Status atual</dt>
+          <dd>{{ currentInvoice.status === 'CLOSED' ? 'Fechada' : 'Aberta' }}</dd>
+          <dt>Total movimentado</dt>
+          <dd>
+            {{ currentInvoice.items | invoiceTotalUnits }}
+            {{ (currentInvoice.items | invoiceTotalUnits) === 1 ? 'unidade' : 'unidades' }}
+          </dd>
+        </dl>
+      </aside>
+    </section>
+
+    <section class="panel activity-panel">
+      <h2>Linha do tempo</h2>
+      <div class="activity-steps">
+        <span class="done"><app-icon name="check" /> Nota criada</span>
+        @if (currentInvoice.status === 'CLOSED') {
+          <span class="done"><app-icon name="check" /> Estoque processado</span
+          ><span class="done"><app-icon name="check" /> Emissão concluída</span>
+        } @else {
+          <span class="waiting">Aguardando solicitação de emissão</span>
+        }
+      </div>
+    </section>
+  }
+}

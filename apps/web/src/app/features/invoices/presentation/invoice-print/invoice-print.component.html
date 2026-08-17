@@ -1,0 +1,66 @@
+<div class="print-actions no-print">
+  <a mat-button [routerLink]="['/notas', invoiceId]"><app-icon name="back" /> Voltar para a nota</a>
+  @if (invoice()?.status === 'CLOSED' && !loading() && !error()) {
+    <button mat-flat-button type="button" (click)="print()">
+      <app-icon name="printer" /> Imprimir
+    </button>
+  }
+</div>
+<app-error-banner
+  class="no-print"
+  [error]="error()"
+  heading="Não foi possível preparar a impressão"
+  (retry)="loadInvoice()"
+/>
+
+@if (loading()) {
+  <app-loading-state class="no-print" message="Preparando impressão…" />
+} @else if (invoice(); as currentInvoice) {
+  @if (currentInvoice.status !== 'CLOSED') {
+    <section class="empty-state surface no-print" role="alert">
+      <p class="eyebrow">Nota aberta</p>
+      <h1>Emita a nota antes de imprimir</h1>
+      <p>A movimentação precisa ser concluída para gerar a via.</p>
+      <a mat-flat-button [routerLink]="['/notas', currentInvoice.id]">Emitir nota</a>
+    </section>
+  } @else {
+    <article class="invoice-document">
+      <header class="document-header">
+        <div class="document-brand"><strong>KORP</strong><strong>FLOW</strong></div>
+        <h1>Nota de<br />movimentação<br />de estoque</h1>
+        <time>{{ currentInvoice.closedAt | date: 'dd/MM/yyyy' }}</time>
+      </header>
+      <section class="document-meta">
+        <strong>NF-{{ currentInvoice.number }}</strong
+        ><span>Criação: {{ currentInvoice.createdAt | date: 'dd/MM/yyyy' }}</span
+        ><span>Emissão: {{ currentInvoice.closedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+      </section>
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Descrição</th>
+            <th>Quantidade</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of currentInvoice.items; track item.productId) {
+            <tr>
+              <td>{{ item.productCode }}</td>
+              <td>{{ item.productDescription }}</td>
+              <td>{{ item.quantity }}</td>
+            </tr>
+          }
+          <tr class="total-row">
+            <td colspan="2">Total</td>
+            <td>{{ currentInvoice.items | invoiceTotalUnits }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <footer>
+        <span>Documento simplificado de movimentação de estoque</span
+        ><span>Gerado eletronicamente por Korp Flow</span>
+      </footer>
+    </article>
+  }
+}

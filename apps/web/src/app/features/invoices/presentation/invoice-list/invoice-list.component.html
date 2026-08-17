@@ -1,0 +1,125 @@
+<header class="page-header">
+  <div>
+    <h1>Notas</h1>
+    <p>Emissão e movimentação fiscal</p>
+  </div>
+  <a mat-flat-button routerLink="/notas/nova"><app-icon name="plus" /> Nova Nota</a>
+</header>
+
+<app-error-banner
+  [error]="store.error()"
+  heading="Não foi possível carregar as notas"
+  (retry)="loadInvoices()"
+/>
+
+@if (store.loading() && !store.loaded()) {
+  <app-loading-state message="Carregando notas…" />
+} @else if (store.invoices().length === 0 && filter() === 'all' && !store.error()) {
+  <section class="empty-state surface">
+    <p class="eyebrow">Nenhuma nota</p>
+    <h2>Crie sua primeira nota</h2>
+    <p>Selecione produtos e quantidades para iniciar uma movimentação.</p>
+    <a mat-flat-button routerLink="/notas/nova">Criar nota</a>
+  </section>
+} @else {
+  <div class="filter-row">
+    <fieldset class="filter-tabs">
+      <legend class="sr-only">Filtrar notas por status</legend>
+      <button
+        type="button"
+        [class.active]="filter() === 'all'"
+        [attr.aria-pressed]="filter() === 'all'"
+        (click)="setFilter('all')"
+      >
+        Todas
+      </button>
+      <button
+        type="button"
+        [class.active]="filter() === 'OPEN'"
+        [attr.aria-pressed]="filter() === 'OPEN'"
+        (click)="setFilter('OPEN')"
+      >
+        Abertas
+      </button>
+      <button
+        type="button"
+        [class.active]="filter() === 'CLOSED'"
+        [attr.aria-pressed]="filter() === 'CLOSED'"
+        (click)="setFilter('CLOSED')"
+      >
+        Fechadas
+      </button>
+    </fieldset>
+    @if (store.loading()) {
+      <span class="remote-loading" aria-live="polite"
+        ><mat-spinner diameter="16" /> Atualizando…</span
+      >
+    }
+  </div>
+
+  <div class="table-container invoice-table" [attr.aria-busy]="store.loading()">
+    <table mat-table [dataSource]="store.invoices()">
+      <ng-container matColumnDef="number"
+        ><th mat-header-cell *matHeaderCellDef>Número</th>
+        <td mat-cell *matCellDef="let invoice">
+          <a class="invoice-number" [routerLink]="['/notas', invoice.id]"
+            >NF-{{ invoice.number }}</a
+          >
+        </td></ng-container
+      >
+      <ng-container matColumnDef="createdAt"
+        ><th mat-header-cell *matHeaderCellDef>Data de criação</th>
+        <td mat-cell *matCellDef="let invoice">
+          {{ invoice.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+        </td></ng-container
+      >
+      <ng-container matColumnDef="items"
+        ><th mat-header-cell *matHeaderCellDef>Itens / unidades</th>
+        <td mat-cell *matCellDef="let invoice">
+          {{ invoice.items.length }} / {{ invoice.items | invoiceTotalUnits }}
+        </td></ng-container
+      >
+      <ng-container matColumnDef="status"
+        ><th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let invoice">
+          <app-invoice-status-badge [status]="invoice.status" /></td
+      ></ng-container>
+      <ng-container matColumnDef="actions"
+        ><th mat-header-cell *matHeaderCellDef>Ações</th>
+        <td mat-cell *matCellDef="let invoice">
+          <div class="row-actions">
+            <a
+              [routerLink]="['/notas', invoice.id]"
+              [attr.aria-label]="'Visualizar nota ' + invoice.number"
+              title="Visualizar"
+              ><app-icon name="eye"
+            /></a>
+            @if (invoice.status === 'CLOSED') {
+              <a
+                class="print-link"
+                [routerLink]="['/notas', invoice.id, 'impressao']"
+                [attr.aria-label]="'Imprimir nota ' + invoice.number"
+                title="Imprimir"
+                ><app-icon name="printer"
+              /></a>
+            }
+          </div></td
+      ></ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+    @if (store.invoices().length === 0) {
+      <div class="no-results">
+        <strong>Nenhuma nota neste status</strong
+        ><span>Selecione outro filtro para continuar.</span>
+      </div>
+    }
+  </div>
+  <app-pagination
+    [total]="store.total()"
+    [currentPage]="currentPage()"
+    [pageSize]="pageSize"
+    itemLabel="notas"
+    (pageChange)="goToPage($event)"
+  />
+}

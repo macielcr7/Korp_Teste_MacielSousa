@@ -1,0 +1,173 @@
+<header class="page-header">
+  <div>
+    <h1>Produtos</h1>
+    <p>Catálogo e níveis de estoque</p>
+  </div>
+  <a class="new-product" routerLink="/produtos/novo"><app-icon name="plus" /> Novo Produto</a>
+</header>
+
+<app-error-banner
+  [error]="store.error()"
+  heading="Não foi possível carregar os produtos"
+  (retry)="loadProducts()"
+/>
+
+@if (store.loading() && !store.loaded()) {
+  <app-loading-state message="Carregando produtos…" />
+} @else if (store.products().length === 0 && !hasRemoteFilters() && !store.error()) {
+  <section class="empty-state surface">
+    <p class="eyebrow">Estoque vazio</p>
+    <h2>Cadastre o primeiro produto</h2>
+    <p>Adicione um item para começar a emitir notas.</p>
+    <a mat-flat-button routerLink="/produtos/novo">Cadastrar produto</a>
+  </section>
+} @else {
+  <section class="catalog-tools" aria-label="Ferramentas da lista">
+    <label class="search-box"
+      ><app-icon name="search" /><input
+        type="search"
+        aria-label="Buscar produtos"
+        placeholder="Buscar por código ou descrição..."
+        [value]="search()"
+        (input)="updateSearch($event)"
+    /></label>
+    @if (store.loading()) {
+      <span class="remote-loading" aria-live="polite"
+        ><mat-spinner diameter="16" /> Atualizando…</span
+      >
+    }
+  </section>
+
+  <fieldset id="product-filter-tabs" class="filter-tabs">
+    <legend class="sr-only">Filtrar produtos</legend>
+    <button
+      type="button"
+      [class.active]="filter() === 'all'"
+      [attr.aria-pressed]="filter() === 'all'"
+      (click)="setFilter('all')"
+    >
+      Todos
+    </button>
+    <button
+      type="button"
+      [class.active]="filter() === 'low'"
+      [attr.aria-pressed]="filter() === 'low'"
+      (click)="setFilter('low')"
+    >
+      Saldo Baixo
+    </button>
+    <button
+      type="button"
+      [class.active]="filter() === 'empty'"
+      [attr.aria-pressed]="filter() === 'empty'"
+      (click)="setFilter('empty')"
+    >
+      Sem Estoque
+    </button>
+    <button
+      type="button"
+      [class.active]="filter() === 'active'"
+      [attr.aria-pressed]="filter() === 'active'"
+      (click)="setFilter('active')"
+    >
+      Ativos
+    </button>
+  </fieldset>
+
+  <div class="table-container product-table" [attr.aria-busy]="store.loading()">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Código ↑</th>
+            <th>Descrição</th>
+            <th class="numeric">Saldo Atual</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (product of store.products(); track product.id) {
+            <tr>
+              <td [title]="product.code">
+                <strong class="product-code">{{ product.code }}</strong>
+              </td>
+              <td [title]="product.description">{{ product.description }}</td>
+              <td class="numeric">
+                <strong
+                  [class.zero-balance]="product.balance === 0"
+                  [class.low-balance]="product.balance > 0 && product.balance <= 5"
+                  >{{ product.balance }}</strong
+                >
+              </td>
+              <td>
+                <span class="stock-status" [attr.data-status]="stockStatus(product.balance)">
+                  @if (stockStatus(product.balance) === 'low') {
+                    <app-icon name="warning" />
+                  }
+                  {{
+                    stockStatus(product.balance) === 'empty'
+                      ? 'Sem Estoque'
+                      : stockStatus(product.balance) === 'low'
+                        ? 'Saldo Baixo'
+                        : 'Ativo'
+                  }}</span
+                >
+              </td>
+              <td>
+                <div class="row-actions">
+                  <span
+                    class="unavailable-action"
+                    role="button"
+                    tabindex="0"
+                    aria-disabled="true"
+                    aria-label="Visualizar {{ product.code }} — ação indisponível"
+                    matTooltip="Visualização ainda não disponível"
+                    matTooltipPosition="above"
+                  >
+                    <app-icon name="eye" />
+                  </span>
+                  <span
+                    class="unavailable-action"
+                    role="button"
+                    tabindex="0"
+                    aria-disabled="true"
+                    aria-label="Editar {{ product.code }} — ação indisponível"
+                    matTooltip="Edição ainda não disponível"
+                    matTooltipPosition="above"
+                  >
+                    <app-icon name="edit" />
+                  </span>
+                  <span
+                    class="unavailable-action delete"
+                    role="button"
+                    tabindex="0"
+                    aria-disabled="true"
+                    aria-label="Excluir {{ product.code }} — ação indisponível"
+                    matTooltip="Exclusão ainda não disponível"
+                    matTooltipPosition="above"
+                  >
+                    <app-icon name="trash" />
+                  </span>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (store.products().length === 0) {
+      <div class="no-results">
+        <app-icon name="search" /><strong>Nenhum produto encontrado</strong
+        ><span>Ajuste a busca ou selecione outro filtro.</span>
+      </div>
+    }
+  </div>
+  <app-pagination
+    [total]="store.total()"
+    [currentPage]="currentPage()"
+    [pageSize]="pageSize"
+    itemLabel="produtos"
+    (pageChange)="goToPage($event)"
+  />
+}

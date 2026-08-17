@@ -1,0 +1,138 @@
+:host {
+  display: block;
+  max-width: 42rem;
+  margin-inline: auto;
+}
+.local-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: var(--kf-muted);
+  font-size: 0.875rem;
+}
+.local-breadcrumb a {
+  color: var(--kf-blue);
+  text-decoration: none;
+}
+.product-form {
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+}
+.form-header {
+  margin-bottom: 1.5rem;
+}
+.form-header h1 {
+  margin-bottom: 0.25rem;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+.form-header p {
+  margin: 0;
+  color: var(--kf-muted);
+  font-size: 0.875rem;
+}
+.form-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 1rem;
+}
+.field {
+  display: grid;
+  align-content: start;
+  gap: 0.375rem;
+  color: var(--kf-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.field input {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--kf-radius);
+  outline: 0;
+  color: var(--kf-text);
+  background: white;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+.field input::placeholder {
+  color: #94a3b8;
+}
+.field input:focus {
+  border-color: var(--kf-blue);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+.field input.invalid {
+  border-color: #f87171;
+  box-shadow: 0 0 0 1px #f87171;
+}
+.field small {
+  min-height: 1rem;
+  color: var(--kf-muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.field small.error {
+  color: #dc2626;
+  font-weight: 500;
+}
+.description-field {
+  grid-column: 1 / -1;
+}
+.balance-field {
+  max-width: 100%;
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--kf-border-soft);
+}
+.form-actions a,
+.form-actions button {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: var(--kf-radius);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.form-actions a {
+  color: #475569;
+}
+.form-actions button {
+  color: white;
+  background: var(--kf-blue);
+  cursor: pointer;
+}
+.form-actions button:hover {
+  background: var(--kf-blue-hover);
+}
+button mat-spinner {
+  display: inline-block;
+}
+@media (max-width: 38rem) {
+  .product-form {
+    padding: 1rem;
+  }
+  .form-body {
+    grid-template-columns: 1fr;
+  }
+  .description-field {
+    grid-column: auto;
+  }
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+  .form-actions > * {
+    width: 100%;
+  }
+}

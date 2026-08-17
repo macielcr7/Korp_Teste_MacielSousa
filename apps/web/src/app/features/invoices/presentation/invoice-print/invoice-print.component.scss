@@ -1,0 +1,131 @@
+.print-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+.print-actions a,
+.print-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.invoice-document {
+  width: min(100%, 49.6rem);
+  min-height: 70.1rem;
+  margin-inline: auto;
+  padding: 3rem;
+  color: #111827;
+  background: white;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.12);
+}
+.document-header {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  align-items: start;
+  padding-bottom: 0.8rem;
+  border-bottom: 1.5px solid #111;
+}
+.document-brand {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 1rem;
+  font-weight: 800;
+}
+.document-header h1 {
+  margin: 0;
+  color: #111;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  text-transform: uppercase;
+}
+.document-header time {
+  justify-self: end;
+  font-size: 0.72rem;
+}
+.document-meta {
+  display: flex;
+  gap: 2rem;
+  padding: 1.1rem 0;
+  font-size: 0.72rem;
+}
+.document-meta strong {
+  margin-right: 0.5rem;
+}
+table {
+  width: 100%;
+  margin-top: 0.4rem;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+th,
+td {
+  padding: 0.65rem 0.55rem;
+  border: 1px solid #111;
+  text-align: left;
+}
+th {
+  color: #111;
+  background: white;
+  font-weight: 800;
+}
+th:last-child,
+td:last-child {
+  width: 8rem;
+  text-align: right;
+}
+.total-row td {
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.total-row td:first-child {
+  text-align: right;
+}
+footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #bbb;
+  color: #666;
+  font-size: 0.55rem;
+}
+@media (max-width: 38rem) {
+  .invoice-document {
+    min-height: 0;
+    padding: 1.2rem;
+  }
+  .document-meta {
+    display: grid;
+    gap: 0.35rem;
+  }
+  .document-header {
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+  }
+  .document-header h1 {
+    grid-column: 1/-1;
+    grid-row: 2;
+    text-align: left;
+  }
+  footer {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+}
+@media print {
+  :host {
+    display: block;
+  }
+  .invoice-document {
+    width: 100%;
+    min-height: auto;
+    padding: 0;
+    box-shadow: none;
+  }
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+}

@@ -1,0 +1,69 @@
+<nav class="local-breadcrumb" aria-label="Navegação estrutural">
+  <a routerLink="/produtos">Produtos</a><span>›</span><span>Novo Produto</span>
+</nav>
+
+<app-error-banner
+  [error]="error()"
+  heading="Não foi possível cadastrar o produto"
+  [retryable]="false"
+/>
+
+<form class="product-form panel" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <header class="form-header">
+    <h1>Informações do Produto</h1>
+    <p>Cadastre um item no catálogo operacional.</p>
+  </header>
+  <div class="form-body">
+    <label class="field code-field"
+      ><span>Código do Produto*</span
+      ><input
+        formControlName="code"
+        autocomplete="off"
+        maxlength="64"
+        placeholder="PRD-001"
+      /><small [class.error]="form.controls.code.touched && form.controls.code.invalid">
+        @if (form.controls.code.touched && form.controls.code.invalid) {
+          Informe um código válido.
+        } @else {
+          Identificador único do produto
+        }
+      </small></label
+    >
+    <label class="field description-field"
+      ><span>Descrição*</span
+      ><input
+        formControlName="description"
+        maxlength="255"
+        placeholder="Ex: Parafuso Sextavado M8x30"
+        [class.invalid]="form.controls.description.touched && form.controls.description.invalid"
+      />
+      @if (form.controls.description.touched && form.controls.description.invalid) {
+        <small class="error">Campo obrigatório</small>
+      }
+    </label>
+    <label class="field balance-field"
+      ><span>Saldo Atual*</span
+      ><input
+        formControlName="balance"
+        type="number"
+        inputmode="numeric"
+        min="0"
+        step="1"
+        placeholder="0"
+      />
+      @if (form.controls.balance.touched && form.controls.balance.invalid) {
+        <small class="error">Informe um saldo inteiro maior ou igual a zero.</small>
+      }
+    </label>
+  </div>
+  <div class="form-actions">
+    <a routerLink="/produtos">Cancelar</a
+    ><button type="submit" [disabled]="submitting()">
+      @if (submitting()) {
+        <mat-spinner diameter="20" aria-label="Salvando produto" />
+      } @else {
+        Salvar Produto
+      }
+    </button>
+  </div>
+</form>

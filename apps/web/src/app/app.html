@@ -1,0 +1,55 @@
+<a class="skip-link" href="#main-content">Ir para o conteúdo</a>
+
+<div class="app-shell">
+  <aside class="sidebar no-print" aria-label="Navegação da aplicação">
+    <a class="brand" routerLink="/" aria-label="Korp Flow - Visão operacional">
+      <span>KORP</span><strong>Flow</strong><small>2.0</small>
+    </a>
+
+    <nav class="desktop-nav" aria-label="Navegação principal">
+      <a routerLink="/produtos" routerLinkActive="active">
+        <app-icon name="products" />
+        <span>Produtos</span>
+      </a>
+      <a routerLink="/notas" routerLinkActive="active">
+        <app-icon name="invoices" />
+        <span>Notas</span>
+      </a>
+    </nav>
+
+    <div class="operator">
+      <span class="avatar" aria-hidden="true">MS</span>
+      <span><strong>Maciel Sousa</strong><small>Operador</small></span>
+    </div>
+  </aside>
+
+  <div class="workspace">
+    <header class="topbar no-print" [class.dashboard-bar]="isDashboard()">
+      <div class="topbar-leading">
+        <a class="mobile-brand" routerLink="/" aria-label="Korp Flow - Início"
+          ><span>KORP</span> Flow</a
+        >
+        <div class="breadcrumb">
+          <strong>{{ section() }}</strong
+          ><span>/ Operações</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span class="user-name">Maciel Sousa</span>
+      </div>
+    </header>
+
+    <main id="main-content" class="app-content" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+
+  <nav class="mobile-nav no-print" aria-label="Navegação móvel">
+    <a routerLink="/produtos" routerLinkActive="active"
+      ><app-icon name="products" /><span>Produtos</span></a
+    >
+    <a routerLink="/notas" routerLinkActive="active"
+      ><app-icon name="invoices" /><span>Notas</span></a
+    >
+  </nav>
+</div>

@@ -1,0 +1,182 @@
+<nav class="local-breadcrumb" aria-label="Navegação estrutural">
+  <a routerLink="/notas">Notas</a><span>›</span><span>Nova nota</span>
+</nav>
+<header class="page-header">
+  <div>
+    <h1>Nova nota</h1>
+    <p>Registre uma movimentação de estoque.</p>
+  </div>
+</header>
+
+<app-error-banner [error]="error()" [heading]="errorTitle()" (retry)="retryLastAction()" />
+
+@if (loadingProducts()) {
+  <app-loading-state message="Carregando catálogo…" />
+} @else if (products().length === 0 && !error()) {
+  <section class="empty-state surface">
+    <p class="eyebrow">Sem produtos</p>
+    <h2>Cadastre um produto antes de criar a nota</h2>
+    <a mat-flat-button routerLink="/produtos/novo">Cadastrar produto</a>
+  </section>
+} @else if (products().length > 0) {
+  <form class="invoice-layout" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="form-main">
+      <section class="panel note-context">
+        <div><span>Número</span><strong>Gerado automaticamente</strong></div>
+        <div><span>Data de criação</span><strong>Registrada pelo servidor</strong></div>
+        <p>
+          A nota será criada em aberto. A baixa do estoque ocorrerá somente após a confirmação da
+          emissão.
+        </p>
+      </section>
+
+      <section class="panel items-panel">
+        <header class="panel-heading">
+          <div>
+            <h2>
+              Itens da nota
+              <small>{{ items.length }} {{ items.length === 1 ? 'item' : 'itens' }}</small>
+            </h2>
+            <p>
+              Selecione até {{ maximumInvoiceItems }} produtos distintos e informe as quantidades.
+            </p>
+          </div>
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="items.length >= maximumInvoiceItems"
+            (click)="addItem()"
+          >
+            <app-icon name="plus" /> Adicionar item
+          </button>
+        </header>
+        <div formArrayName="items" class="items">
+          @for (item of items.controls; track item; let index = $index) {
+            <fieldset [formGroupName]="index">
+              <legend class="sr-only">Item {{ index + 1 }}</legend>
+              <span class="row-index" aria-hidden="true">{{ index + 1 }}</span>
+              <label class="sr-only" for="invoice-product-{{ index }}"
+                >Produto do item {{ index + 1 }}</label
+              >
+              <mat-form-field appearance="outline" class="product-select">
+                <mat-label>Produto</mat-label>
+                <input
+                  id="invoice-product-{{ index }}"
+                  matInput
+                  formControlName="productId"
+                  [matAutocomplete]="productAutocomplete"
+                  autocomplete="off"
+                  placeholder="Pesquise por código ou descrição"
+                />
+                <mat-autocomplete
+                  #productAutocomplete="matAutocomplete"
+                  [displayWith]="productDisplay"
+                  autoActiveFirstOption
+                >
+                  @if (isSearchingProducts(item.controls.productId)) {
+                    <mat-option disabled>Buscando produtos…</mat-option>
+                  } @else {
+                    @for (product of productOptions(item.controls.productId); track product.id) {
+                      <mat-option [value]="product.id">
+                        <span class="product-option">{{ product.description }}</span>
+                      </mat-option>
+                    } @empty {
+                      <mat-option disabled>Nenhum produto encontrado.</mat-option>
+                    }
+                  }
+                </mat-autocomplete>
+                @if (item.controls.productId.hasError('required')) {
+                  <mat-error>Informe o produto.</mat-error>
+                } @else if (item.controls.productId.hasError('productNotSelected')) {
+                  <mat-error>Selecione um produto encontrado na pesquisa.</mat-error>
+                }
+              </mat-form-field>
+              <div class="balance">
+                <span>Saldo</span
+                ><strong>{{
+                  item.controls.productId.value
+                    ? productBalance(item.controls.productId.value)
+                    : '—'
+                }}</strong>
+              </div>
+              <div class="quantity-field">
+                <label class="sr-only" for="invoice-quantity-{{ index }}"
+                  >Quantidade do item {{ index + 1 }}</label
+                >
+                <mat-form-field appearance="outline" class="quantity">
+                  <mat-label>Quantidade</mat-label>
+                  <input
+                    id="invoice-quantity-{{ index }}"
+                    matInput
+                    formControlName="quantity"
+                    type="number"
+                    inputmode="numeric"
+                    min="1"
+                    [attr.max]="productBalance(item.controls.productId.value) ?? null"
+                    step="1"
+                  />
+                  @if (item.controls.quantity.invalid) {
+                    <mat-error>Use um inteiro maior que zero.</mat-error>
+                  }
+                </mat-form-field>
+                @if (item.hasError('insufficientStock')) {
+                  <p class="stock-warning" role="alert">
+                    Quantidade acima do saldo disponível ({{
+                      productBalance(item.controls.productId.value)
+                    }}).
+                  </p>
+                }
+              </div>
+              <button
+                class="remove-button"
+                type="button"
+                [disabled]="items.length === 1"
+                [attr.aria-label]="'Remover item ' + (index + 1)"
+                (click)="removeItem(index)"
+              >
+                <app-icon name="trash" />
+              </button>
+            </fieldset>
+          }
+        </div>
+        @if (items.hasError('duplicateProducts') && items.touched) {
+          <p class="form-error" role="alert">
+            <app-icon name="warning" /> Cada produto pode aparecer somente uma vez na nota.
+          </p>
+        }
+      </section>
+    </div>
+
+    <aside class="summary-panel panel" aria-label="Resumo da nota">
+      <header>
+        <h2>Resumo da nota</h2>
+        <p>Revise antes de continuar</p>
+      </header>
+      <div class="selected-products">
+        @for (item of selectedItems(); track item.product.id) {
+          <div>
+            <span
+              >{{ item.product.description }}<small>{{ item.product.code }}</small></span
+            ><strong>{{ item.quantity }} un.</strong>
+          </div>
+        } @empty {
+          <p>Nenhum produto selecionado.</p>
+        }
+      </div>
+      <dl>
+        <dt>Total de itens</dt>
+        <dd>{{ selectedItems().length }}</dd>
+        <dt>Total de unidades</dt>
+        <dd>{{ totalUnits() }}</dd>
+      </dl>
+      <button mat-flat-button type="submit" [disabled]="submitting() || form.invalid">
+        @if (submitting()) {
+          <mat-spinner diameter="20" aria-label="Criando nota" />
+        } @else {
+          Continuar para emissão
+        }
+      </button>
+      <a mat-button routerLink="/notas">Cancelar</a>
+    </aside>
+  </form>
+}

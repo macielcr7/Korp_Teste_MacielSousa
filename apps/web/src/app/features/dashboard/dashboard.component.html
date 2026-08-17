@@ -1,0 +1,129 @@
+<header class="dashboard-header">
+  <div>
+    <p class="page-eyebrow">Visão operacional</p>
+    <h1>Bom dia, Maciel</h1>
+    <p>Acompanhe estoque e notas em um só lugar.</p>
+  </div>
+  <time [attr.datetime]="today.toISOString()">{{ today | date: "EEEE, d 'de' MMMM 'de' y" }}</time>
+</header>
+
+<app-error-banner
+  [error]="error()"
+  heading="Não foi possível atualizar o painel"
+  (retry)="reload()"
+/>
+
+@if (loading()) {
+  <section class="stats-grid" aria-label="Carregando indicadores" aria-busy="true">
+    @for (item of [1, 2, 3, 4]; track item) {
+      <div class="stat-card skeleton"></div>
+    }
+  </section>
+} @else if (!error()) {
+  <section class="stats-grid" aria-label="Indicadores operacionais">
+    <article class="stat-card">
+      <span>Produtos cadastrados</span><app-icon name="products" />
+      <strong>{{ totalProducts() }}</strong
+      ><small>itens no catálogo</small>
+    </article>
+    <article class="stat-card attention">
+      <span>Estoque em atenção</span><app-icon name="warning" />
+      <strong>{{ attentionStockTotal() }}</strong
+      ><small>saldo entre 1 e 5</small>
+    </article>
+    <article class="stat-card">
+      <span>Notas em aberto</span><app-icon name="invoices" />
+      <strong>{{ openInvoicesTotal() }}</strong
+      ><small>aguardando emissão</small>
+    </article>
+    <article class="stat-card success">
+      <span>Notas emitidas</span><app-icon name="check" />
+      <strong>{{ closedInvoicesTotal() }}</strong
+      ><small>processadas com sucesso</small>
+    </article>
+  </section>
+
+  <section class="dashboard-grid">
+    <article class="panel recent-panel">
+      <header class="panel-heading">
+        <div>
+          <h2>Últimas notas</h2>
+          <p>Movimentações recentes</p>
+        </div>
+        <a routerLink="/notas">Ver todas <app-icon name="arrow" /></a>
+      </header>
+      @if (recentInvoices().length === 0) {
+        <div class="compact-empty">
+          <p>Nenhuma nota criada.</p>
+          <a routerLink="/notas/nova">Criar primeira nota</a>
+        </div>
+      } @else {
+        <div class="recent-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Número</th>
+                <th>Data</th>
+                <th>Itens</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (invoice of recentInvoices(); track invoice.id) {
+                <tr>
+                  <td>
+                    <a [routerLink]="['/notas', invoice.id]">NF-{{ invoice.number }}</a>
+                  </td>
+                  <td>{{ invoice.createdAt | date: 'dd/MM/yyyy' }}</td>
+                  <td>{{ invoice.items.length }}</td>
+                  <td>
+                    <app-invoice-status-badge [status]="invoice.status" />
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </article>
+
+    <div class="side-stack">
+      <article class="panel critical-panel">
+        <header class="panel-heading">
+          <div>
+            <h2>Estoque crítico</h2>
+            <p>Itens para revisar</p>
+          </div>
+        </header>
+        @if (criticalProducts().length === 0) {
+          <div class="all-good">
+            <app-icon name="check" /><span>Nenhum produto em nível crítico.</span>
+          </div>
+        } @else {
+          <ul>
+            @for (product of criticalProducts(); track product.id) {
+              <li>
+                <span
+                  ><strong>{{ product.description }}</strong
+                  ><small>{{ product.code }}</small></span
+                ><b [class.empty]="product.balance === 0">{{ product.balance }}</b>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+      <article class="panel quick-actions">
+        <header class="panel-heading">
+          <div>
+            <h2>Ações rápidas</h2>
+            <p>Atalhos operacionais</p>
+          </div>
+        </header>
+        <div>
+          <a routerLink="/produtos/novo"><app-icon name="plus" /> Novo produto</a
+          ><a routerLink="/notas/nova"><app-icon name="invoices" /> Nova nota</a>
+        </div>
+      </article>
+    </div>
+  </section>
+}
