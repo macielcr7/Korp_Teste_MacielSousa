@@ -62,14 +62,14 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
       padding: 0 0.4rem;
       border: 1px solid var(--kf-border);
       border-radius: 0.25rem;
-      color: #475569;
+      color: var(--kf-brand);
       background: white;
       cursor: pointer;
     }
     button.active {
       color: white;
-      border-color: var(--kf-blue);
-      background: var(--kf-blue);
+      border-color: var(--kf-primary);
+      background: var(--kf-primary);
     }
     button:disabled {
       cursor: default;

@@ -36,8 +36,8 @@
 }
 .filter-tabs button.active {
   color: white;
-  border-color: #1e293b;
-  background: #1e293b;
+  border-color: var(--kf-brand);
+  background: var(--kf-brand);
 }
 .remote-loading {
   display: inline-flex;

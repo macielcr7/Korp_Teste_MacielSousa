@@ -62,7 +62,7 @@
 }
 .field input:focus {
   border-color: var(--kf-blue);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--kf-primary) 20%, transparent);
 }
 .field input.invalid {
   border-color: #f87171;

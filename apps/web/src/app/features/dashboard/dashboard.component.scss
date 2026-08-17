@@ -62,7 +62,7 @@
 }
 .skeleton {
   overflow: hidden;
-  background: #edf2f8;
+  background: var(--kf-brand-soft);
 }
 .skeleton::after {
   position: absolute;
@@ -110,7 +110,7 @@
 }
 .recent-table th {
   color: var(--kf-muted);
-  background: #f7f9fc;
+  background: var(--kf-canvas);
   font-size: 0.64rem;
   text-transform: uppercase;
 }
@@ -202,7 +202,7 @@
 }
 .quick-actions a:hover {
   color: var(--kf-blue);
-  border-color: #a8c2f8;
+  border-color: color-mix(in srgb, var(--kf-primary) 35%, var(--kf-border));
   background: var(--kf-blue-soft);
 }
 

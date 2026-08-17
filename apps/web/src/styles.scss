@@ -2,18 +2,26 @@
 
 :root {
   --kf-font: "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;
-  --kf-navy: #0f172a;
-  --kf-navy-2: #17233b;
-  --kf-blue: #2563eb;
-  --kf-blue-hover: #1d4ed8;
-  --kf-blue-soft: #eaf1ff;
-  --kf-canvas: #f8fafc;
+  --kf-accent: #ff0054;
+  --kf-primary: #d90048;
+  --kf-primary-hover: #b8003d;
+  --kf-primary-soft: #ffe8f0;
+  --kf-brand: #2b5362;
+  --kf-brand-deep: #15313b;
+  --kf-brand-soft: #e7eff1;
+  --kf-brand-border: #b8cbd1;
+  --kf-navy: var(--kf-brand-deep);
+  --kf-navy-2: var(--kf-brand);
+  --kf-blue: var(--kf-primary);
+  --kf-blue-hover: var(--kf-primary-hover);
+  --kf-blue-soft: var(--kf-primary-soft);
+  --kf-canvas: #f4f8f9;
   --kf-surface: #ffffff;
-  --kf-border: #e2e8f0;
-  --kf-border-soft: #f1f5f9;
-  --kf-text: #0f172a;
-  --kf-text-soft: #334155;
-  --kf-muted: #64748b;
+  --kf-border: #dce6e9;
+  --kf-border-soft: #ebf1f3;
+  --kf-text: var(--kf-brand-deep);
+  --kf-text-soft: var(--kf-brand);
+  --kf-muted: #637a82;
   --kf-success: #047857;
   --kf-success-bg: #d8f5e8;
   --kf-warning: #b45309;
@@ -21,12 +29,12 @@
   --kf-error: #dc2626;
   --kf-error-bg: #fee2e2;
   --kf-radius: .375rem;
-  --kf-shadow: 0 1px 2px rgba(0,0,0,.05);
+  --kf-shadow: 0 1px 3px rgba(21, 49, 59, .08);
 }
 
 html {
   @include mat.theme((
-    color: (primary: mat.$azure-palette, tertiary: mat.$green-palette),
+    color: (primary: mat.$magenta-palette, tertiary: mat.$cyan-palette),
     typography: "Inter Variable",
     density: -1,
   ));
@@ -71,12 +79,12 @@ a[mat-stroked-button], button[mat-stroked-button], a[mat-button], button[mat-but
 .table-container { max-width: 100%; overflow-x: auto; border: 1px solid var(--kf-border); border-radius: var(--kf-radius); background: white; box-shadow: var(--kf-shadow); }
 table.mat-mdc-table { background: white; }
 .mat-mdc-header-row { height: 2.5rem !important; background: var(--kf-canvas) !important; }
-.mat-mdc-header-cell { color: #60718e !important; font: 800 .67rem/1 var(--kf-font) !important; letter-spacing: .025em; text-transform: uppercase; }
+.mat-mdc-header-cell { color: var(--kf-muted) !important; font: 800 .67rem/1 var(--kf-font) !important; letter-spacing: .025em; text-transform: uppercase; }
 .mat-mdc-row { height: 3.25rem !important; }
 .mat-mdc-cell { color: var(--kf-text-soft); font-size: .78rem; border-bottom-color: var(--kf-border-soft) !important; }
 .mat-mdc-cell strong { color: var(--kf-text); }
 
-.status-chip { display: inline-flex; align-items: center; gap: .35rem; min-height: 1.55rem; padding: .15rem .6rem; border-radius: .35rem; color: #1d4ed8; background: #dce9ff; font-size: .66rem; font-weight: 800; }
+.status-chip { display: inline-flex; align-items: center; gap: .35rem; min-height: 1.55rem; padding: .15rem .6rem; border-radius: .35rem; color: var(--kf-primary-hover); background: var(--kf-primary-soft); font-size: .66rem; font-weight: 800; }
 .status-chip.closed, .status-chip.completed { color: var(--kf-success); background: var(--kf-success-bg); }
 .status-chip.processing, .status-chip.retrying { color: var(--kf-warning); background: var(--kf-warning-bg); }
 .status-chip.failed, .status-chip.empty { color: var(--kf-error); background: var(--kf-error-bg); }
@@ -90,7 +98,7 @@ table.mat-mdc-table { background: white; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 
 .mat-mdc-button, .mat-mdc-form-field, .mat-mdc-select, .mat-mdc-table { font-family: var(--kf-font) !important; }
-.mat-mdc-form-field { --mdc-outlined-text-field-container-shape: .375rem; --mdc-outlined-text-field-outline-color: #cbd5e1; --mdc-outlined-text-field-hover-outline-color: #94a3b8; --mdc-outlined-text-field-focus-outline-color: var(--kf-blue); }
+.mat-mdc-form-field { --mdc-outlined-text-field-container-shape: .375rem; --mdc-outlined-text-field-outline-color: var(--kf-brand-border); --mdc-outlined-text-field-hover-outline-color: var(--kf-brand); --mdc-outlined-text-field-focus-outline-color: var(--kf-primary); }
 .mat-mdc-form-field-subscript-wrapper { font-size: .7rem; }
 
 @media (max-width: 44rem) {

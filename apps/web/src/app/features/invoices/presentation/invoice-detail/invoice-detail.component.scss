@@ -48,9 +48,9 @@
   font-size: 0.75rem;
 }
 .info-banner {
-  color: #1e4fa4;
-  border: 1px solid #b5cffc;
-  background: #edf5ff;
+  color: var(--kf-brand-deep);
+  border: 1px solid var(--kf-brand-border);
+  background: var(--kf-brand-soft);
 }
 .success-banner {
   color: var(--kf-success);
@@ -90,7 +90,7 @@
   bottom: -0.1rem;
   left: 0.57rem;
   width: 2px;
-  background: #dbe4f0;
+  background: var(--kf-brand-soft);
   content: '';
 }
 .step-marker {
@@ -100,7 +100,7 @@
   width: 1.2rem;
   height: 1.2rem;
   place-items: center;
-  border: 2px solid #c9d5e5;
+  border: 2px solid var(--kf-brand-border);
   border-radius: 50%;
   color: transparent;
   background: white;
@@ -137,7 +137,7 @@
 }
 @keyframes pulse {
   50% {
-    box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.12);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--kf-primary) 14%, transparent);
   }
 }
 .progress-label {
@@ -151,7 +151,7 @@
   margin-top: 0.4rem;
   overflow: hidden;
   border-radius: 1rem;
-  background: #e8eef6;
+  background: var(--kf-brand-soft);
 }
 .progress-track span {
   display: block;
@@ -186,7 +186,7 @@
 }
 .detail-table th {
   color: var(--kf-muted);
-  background: #f7f9fc;
+  background: var(--kf-canvas);
   font-size: 0.64rem;
   text-transform: uppercase;
 }
