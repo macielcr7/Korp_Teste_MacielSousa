@@ -27,7 +27,7 @@ Cada serviço segue a arquitetura `domain/application/infra`, replica seu Bounde
 ## Requisitos
 
 - Docker Desktop com Docker Compose.
-- Go 1.26.5 ou superior para desenvolvimento local do backend.
+- Go 1.26.6 ou superior para desenvolvimento local do backend.
 - Node.js 24 e pnpm 11 para desenvolvimento local do frontend.
 
 ## Execução com Docker

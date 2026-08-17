@@ -10,8 +10,8 @@ O sistema implementa o cadastro e a consulta de produtos, criação e consulta d
 
 | Componente | Tecnologia e responsabilidade |
 | --- | --- |
-| Inventory Service | Go 1.26.5, chi 5, `database/sql` com pgx e PostgreSQL 18; produtos, saldos e movimentos |
-| Billing API | Go 1.26.5, chi 5, `database/sql` com pgx e PostgreSQL 18; notas e operações de fechamento |
+| Inventory Service | Go 1.26.6, chi 5, `database/sql` com pgx e PostgreSQL 18; produtos, saldos e movimentos |
+| Billing API | Go 1.26.6, chi 5, `database/sql` com pgx e PostgreSQL 18; notas e operações de fechamento |
 | Billing Worker | Mesmo módulo e imagem do Billing; processamento assíncrono das operações |
 | Web | Angular 22, Angular Material/CDK 22, RxJS 7.8, TypeScript 6 e pnpm 11 |
 | Borda web | Nginx não privilegiado; SPA, cache de arquivos estáticos, headers de segurança e proxy `/api` |
