@@ -30,7 +30,14 @@ describe('toApiError', () => {
     const result = toApiError(new HttpErrorResponse({ status: 0 }));
 
     expect(result.retryable).toBe(true);
-    expect(result.message).toContain('conectar');
+    expect(result.message).toContain('interrompida');
+  });
+
+  it('explains when an upstream service is restarting', () => {
+    const result = toApiError(new HttpErrorResponse({ status: 502 }));
+
+    expect(result.retryable).toBe(true);
+    expect(result.message).toContain('reiniciando');
   });
 
   it('uses the request id response header as a correlation fallback', () => {

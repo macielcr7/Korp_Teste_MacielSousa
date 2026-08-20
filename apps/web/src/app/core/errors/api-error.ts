@@ -111,7 +111,9 @@ export function toApiError(response: HttpErrorResponse): ApiError {
   const fallback = fallbackByStatus(response.status);
   const code = problem?.code;
   const message =
-    response.status >= 500 && (!code || code === 'INTERNAL_ERROR')
+    [502, 503, 504].includes(response.status) && !code
+      ? fallback
+      : response.status >= 500 && (!code || code === 'INTERNAL_ERROR')
       ? messagesByCode['INTERNAL_ERROR']
       : localizeServerMessage(problem?.detail ?? problem?.title, code, fallback);
 
@@ -130,7 +132,7 @@ export function toApiError(response: HttpErrorResponse): ApiError {
 
 function fallbackByStatus(status: number): string {
   if (status === 0) {
-    return 'A aplicação não conseguiu se conectar ao servidor. Confirme se os serviços estão em execução e tente novamente.';
+    return 'A conexão com os serviços foi interrompida. Aguarde alguns instantes e tente novamente.';
   }
   if (status === 400 || status === 422) {
     return 'A solicitação contém dados inválidos. Revise os campos informados.';
@@ -139,8 +141,8 @@ function fallbackByStatus(status: number): string {
   if (status === 409) {
     return 'A operação entrou em conflito com o estado atual do recurso. Atualize a página e tente novamente.';
   }
-  if (status === 503) {
-    return 'O serviço necessário está temporariamente indisponível. Aguarde alguns instantes e tente novamente.';
+  if (status === 502 || status === 503 || status === 504) {
+    return 'Um dos serviços está temporariamente indisponível ou reiniciando. Aguarde alguns instantes e tente novamente.';
   }
   return 'O servidor não conseguiu processar a solicitação. Tente novamente e use o código de rastreio caso o problema persista.';
 }

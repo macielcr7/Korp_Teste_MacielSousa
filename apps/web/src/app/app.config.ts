@@ -5,6 +5,7 @@ import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 
 import { apiErrorInterceptor } from './core/errors/api-error.interceptor';
+import { apiTransientRetryInterceptor } from './core/errors/api-transient-retry.interceptor';
 import { IdempotencyStore } from './core/application/idempotency-store';
 import { SessionIdempotencyStore } from './core/infrastructure/session-idempotency-store';
 import { BillingGateway } from './features/invoices/application/billing.gateway';
@@ -22,7 +23,7 @@ export const appConfig: ApplicationConfig = {
     { provide: BillingGateway, useExisting: BillingApiService },
     { provide: ProductGateway, useExisting: ProductApiService },
     { provide: IdempotencyStore, useExisting: SessionIdempotencyStore },
-    provideHttpClient(withInterceptors([apiErrorInterceptor])),
+    provideHttpClient(withInterceptors([apiErrorInterceptor, apiTransientRetryInterceptor])),
     provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
   ],
 };
